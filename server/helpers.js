@@ -1,18 +1,35 @@
-//Get Functions...
+var db = require('../SQL/db.js').dbConnection;
 
-var isValueInDB = function(value, column, cb){
-
+exports.isValueInDB = isValueInDB = function(value, table, column, callback){
+  db.query('SELECT COUNT(*) from '+table+' where '+column+' = '+value, function(err, rows){
+    if(err){
+      throw err;
+    }
+    console.log(rows);
+    callback(rows[0]['property'] > 1);  //Don't forget to add property!!!
+  });
 };
 
-var insertIntoDB = function(value, column, cb){
-
+exports.insertIntoDB = insertIntoDB = function(value, table, column, callback){
+  db.query('INSERT INTO '+table+' ('+column+') VALUES ('+value+')', function(err){
+    if (err){
+      throw err;
+    }
+    callback();
+  });
 };
 
-var insertMessage = function(messageObj, cb){
-
+exports.insertMessage = insertMessage = function(messageObj, cb){
+  db.query('INSERT INTO Messages (text, id_Room, id_User) VALUES (?, (SELECT id from Rooms where roomname = ?), (SELECT id from Users where username = ?))',
+    [messageObj.text, messageObj.roomname, messageObj.username], function(err, result){
+      if (err){
+        throw err;
+      }
+      cb(result.insertId);
+  });
 };
 
-var checkIfFinished = function(resolutions, property, cb){
+exports.checkIfFinished = checkIfFinished = function(resolutions, property, cb){
   resolutions[property] = true;
   for (var key in resolutions){
     if (resolutions[key] === false){
@@ -22,21 +39,16 @@ var checkIfFinished = function(resolutions, property, cb){
   cb();
 };
 
-var addIfNotInDB = function(data, table, column, after){
-
-   // helpers.isValueInDB(data.username, 'Users', 'username', function(userFound){
-        //   if (userFound){
-        //     helpers.checkIfFinished(isResolved, 'user', function(){
-        //       helpers.insertMessage(data);
-        //     });
-        //   }else{
-        //     helpers.insertIntoDB(data.username, 'Users', 'username', function(){
-        //       helpers.checkIfFinished(isResolved, 'user', function(){
-        //         helpers.insertMessage(data);
-        //       });
-        //     });
-        //   }
-
+exports.addIfNotInDB = addIfNotInDB = function(data, table, column, after){
+  isValueInDB(data, table, column, function(found){
+    if (found){
+      after();
+    }else{
+      insertIntoDB(data, table, column, function(){
+        after();
+      });
+    }
+  });
 };
 
 

@@ -1,9 +1,7 @@
 var url = require('url');
 var fs = require('fs');
+var helpers = require('./helpers.js');
 var db = require('../SQL/db.js').dbConnection;
-
-
-
 
 module.exports.handler = function(request, response) {
 
@@ -42,15 +40,15 @@ module.exports.handler = function(request, response) {
         var isResolved = {user: false, room: false};
         addIfNotInDB(data.username, 'Users', 'username', function(){
           helpers.checkIfFinished(isResolved, 'user', function(){
-            helpers.insertMessage(data,function(){
-              response.end(JSON.stringify({objectId: data['objectId'], createdAt: data['createdAt']}));
+            helpers.insertMessage(data,function(idValue){
+              response.end(JSON.stringify({objectId: idValue}));
             });
           });
         });
         addIfNotInDB(data.roomname, 'Rooms', 'roomname', function(){
           helpers.checkIfFinished(isResolved, 'room', function(){
-            helpers.insertMessage(data, function(){
-              response.end(JSON.stringify({objectId: data['objectId'], createdAt: data['createdAt']}));
+            helpers.insertMessage(data, function(idValue){
+              response.end(JSON.stringify({objectId: idValue}));
             });
           });
         });
